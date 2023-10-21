@@ -1,6 +1,5 @@
 #include <Servo.h>
 
-
 Servo TRAIN_BARRIER_SERVO;
 
 const int GREEN_BUTTON_PIN = 2;
@@ -13,7 +12,9 @@ const int LED_YELLOW_PIN = 10;
 
 const int SERVO_PIN = 7;
 
-const int OPEN_POSITION = 90;
+
+const int OPEN_POSITION = 82.5;
+// const int OPEN_POSITION = 80;
 const int CLOSE_POSITION = 180;
 
 const int LEFT_IR_PIN = 4;
@@ -60,13 +61,15 @@ void setup() {
   TRAIN_BARRIER_SERVO.attach(SERVO_PIN);
   TRAIN_BARRIER_SERVO.write(CLOSE_POSITION);
 
-  Serial.begin(9600);
+  Serial.begin(19200);
+  // SOFTWARE_SERIAL.begin(19200); 
 }
 
 void TRAIN_BARRIER_FUNCTION() {
   GREEN_BUTTON_STATE = digitalRead(GREEN_BUTTON_PIN);
   RED_BUTTON_STATE = digitalRead(RED_BUTTON_PIN);
-  if (!IS_OPENED) {
+  if (!IS_OPENED && IS_DETECTED_ALREADY == false) {
+    // if (!IS_OPENED) {
     if (GREEN_BUTTON_STATE == HIGH) {
       digitalWrite(LED_RED_PIN, LOW);
       digitalWrite(LED_BUILTIN_PIN, HIGH);
@@ -117,22 +120,52 @@ void loop() {
 
     DURATION = pulseIn(ECHO_PIN, HIGH);
     DISTANCE = microsecondsToCentimeters(DURATION);
-    // Serial.println(DISTANCE);
-    if (DISTANCE <= 8) {
-      if (digitalRead(LED_YELLOW_PIN) == LOW && IS_DETECTED_ALREADY == false) {
-        digitalWrite(LED_YELLOW_PIN, HIGH);
-        digitalWrite(BUZZER_PIN, HIGH);
-        IS_DETECTED_ALREADY = true;
-        Serial.println(DISTANCE);
+    if (DISTANCE != 0) {
+      if (DISTANCE <= DISTANCE + 4 || DISTANCE >= DISTANCE - 4) {
+        if (DISTANCE <= 8) {
+          if (digitalRead(LED_YELLOW_PIN) == LOW && IS_DETECTED_ALREADY == false) {
+            digitalWrite(LED_YELLOW_PIN, HIGH);
+            digitalWrite(BUZZER_PIN, HIGH);
+            IS_DETECTED_ALREADY = true;
+            Serial.println(DISTANCE);
+          }
+        } else {
+          digitalWrite(LED_YELLOW_PIN, LOW);
+          digitalWrite(BUZZER_PIN, LOW);
+          IS_DETECTED_ALREADY = false;
+          DISTANCE = 0;
+        }
       }
     } else {
-      digitalWrite(LED_YELLOW_PIN, LOW);
-      digitalWrite(BUZZER_PIN, LOW);
-      IS_DETECTED_ALREADY = false;
+      LEFT_IR_STATE = digitalRead(LEFT_IR_PIN);;
+      RIGHT_IR_STATE = digitalRead(RIGHT_IR_PIN);
+      if (LEFT_IR_STATE == LOW || RIGHT_IR_STATE == LOW) {
+        if (digitalRead(LED_YELLOW_PIN) == LOW && IS_DETECTED_ALREADY == false) {
+          digitalWrite(LED_YELLOW_PIN, HIGH);
+          digitalWrite(BUZZER_PIN, HIGH);
+          IS_DETECTED_ALREADY = true;
+          if(LEFT_IR_STATE == LOW && RIGHT_IR_STATE == LOW) {
+            Serial.println("both");
+          } else if(LEFT_IR_STATE == LOW && RIGHT_IR_STATE == HIGH) {
+            Serial.println("left");
+          } else if (LEFT_IR_STATE == HIGH && RIGHT_IR_STATE == LOW) {
+            Serial.println("right");
+          } else {
+            Serial.println("unknown");
+          }
+        }
+      } else {
+        digitalWrite(LED_YELLOW_PIN, LOW);
+        digitalWrite(BUZZER_PIN, LOW);
+        IS_DETECTED_ALREADY = false;
+        LEFT_IR_STATE = HIGH;
+        RIGHT_IR_STATE = HIGH;
+      }
     }
+    delay(200);
+  } else {
+    TRAIN_BARRIER_FUNCTION();
   }
-  TRAIN_BARRIER_FUNCTION();
-  delay(200);
 }
 
 long microsecondsToCentimeters(long microseconds) {
