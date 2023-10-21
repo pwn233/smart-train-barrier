@@ -1,0 +1,103 @@
+[
+    {
+        "id": "ae1c4c96516a66cb",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "5a2046b644f11dc1",
+        "type": "debug",
+        "z": "ae1c4c96516a66cb",
+        "name": "Check SQL Statement",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "0b1511a2770f2fcf",
+        "type": "serial in",
+        "z": "ae1c4c96516a66cb",
+        "d": true,
+        "name": "Arduino COM3 : 19200",
+        "serial": "4de1121094dfbf2b",
+        "x": 260,
+        "y": 100,
+        "wires": [
+            [
+                "83b900cf9314b1f7"
+            ]
+        ]
+    },
+    {
+        "id": "83b900cf9314b1f7",
+        "type": "function",
+        "z": "ae1c4c96516a66cb",
+        "name": "Create SQL Statement",
+        "func": "let dateTime = new Date();\nlet dates = dateTime.getFullYear() + \":\" + dateTime.getMonth() + \":\" + dateTime.getDate() + \":\" + dateTime.getHours() + \":\" + dateTime.getMinutes() + \":\" + dateTime.getSeconds();\nlet payload = msg.payload;\nlet newPayload = \"\";\nlet sqlStatement = \"sql statement\";\nfor (let i = 0; i < payload.length; i++) {\n    if (!(payload[i] == \"\\n\" || payload[i] == \"\\r\")) {\n        newPayload += payload[i];\n    }\n}\nif (newPayload.includes(\"detected\")) {\n    if (newPayload.includes(\"left\")) {\n        sqlStatement = `INSERT INTO ir_detection (road_side, detected_at) VALUES ('left','${dates}');`;\n        msg.topic = sqlStatement;\n        msg.payload = null;\n        return msg\n    } else if (newPayload.includes(\"right\")) {\n        sqlStatement = `INSERT INTO ir_detection (road_side, detected_at) VALUES ('right','${dates}');`;\n        msg.topic = sqlStatement;\n        msg.payload = null;\n        return msg\n    } else if (newPayload.includes(\"both\")) {\n        sqlStatement = `INSERT INTO ir_detection (road_side, detected_at) VALUES ('both','${dates}');`;\n        msg.topic = sqlStatement;\n        msg.payload = null;\n        return msg\n    } else if (newPayload.includes(\"unknown\")) {\n        sqlStatement = `INSERT INTO ir_detection (road_side, detected_at) VALUES ('unknown','${dates}');`;\n        msg.topic = sqlStatement;\n        msg.payload = null;\n        return msg\n    }\n} else {\n    sqlStatement = `INSERT INTO ultrasonic_detection (distance, detected_at) VALUES ('${newPayload}','${dates}');`;\n    msg.topic = sqlStatement;\n    msg.payload = null;\n    return msg;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 280,
+        "wires": [
+            [
+                "5a2046b644f11dc1"
+            ]
+        ]
+    },
+    {
+        "id": "30ef13e6dad0f3cc",
+        "type": "mysql",
+        "z": "ae1c4c96516a66cb",
+        "mydb": "681727dbddff5b59",
+        "name": "AWS Database",
+        "x": 800,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4de1121094dfbf2b",
+        "type": "serial-port",
+        "serialport": "COM3",
+        "serialbaud": "19200",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "\\n",
+        "bin": "false",
+        "out": "char",
+        "addchar": "",
+        "responsetimeout": "10000"
+    },
+    {
+        "id": "681727dbddff5b59",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "aws-mysql-db.cqbvpf3rpxlr.ap-southeast-2.rds.amazonaws.com",
+        "port": "3306",
+        "db": "cloud-iot",
+        "tz": "",
+        "charset": "UTF8"
+    }
+]

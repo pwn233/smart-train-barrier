@@ -14,7 +14,7 @@ const int SERVO_PIN = 7;
 
 
 const int OPEN_POSITION = 82.5;
-// const int OPEN_POSITION = 80;
+// const int OPEN_POSITION = 90;
 const int CLOSE_POSITION = 180;
 
 const int LEFT_IR_PIN = 4;
@@ -62,7 +62,6 @@ void setup() {
   TRAIN_BARRIER_SERVO.write(CLOSE_POSITION);
 
   Serial.begin(19200);
-  // SOFTWARE_SERIAL.begin(19200); 
 }
 
 void TRAIN_BARRIER_FUNCTION() {
@@ -145,11 +144,11 @@ void loop() {
           digitalWrite(BUZZER_PIN, HIGH);
           IS_DETECTED_ALREADY = true;
           if(LEFT_IR_STATE == LOW && RIGHT_IR_STATE == LOW) {
-            Serial.println("both");
+            Serial.println("detected : both");
           } else if(LEFT_IR_STATE == LOW && RIGHT_IR_STATE == HIGH) {
-            Serial.println("left");
+            Serial.println("detected : left");
           } else if (LEFT_IR_STATE == HIGH && RIGHT_IR_STATE == LOW) {
-            Serial.println("right");
+            Serial.println("detected : right");
           } else {
             Serial.println("unknown");
           }
