@@ -121,7 +121,7 @@ void loop() {
     DISTANCE = microsecondsToCentimeters(DURATION);
     if (DISTANCE != 0) {
       if (DISTANCE <= DISTANCE + 4 || DISTANCE >= DISTANCE - 4) {
-        if (DISTANCE <= 8) {
+        if (DISTANCE <= 6) {
           if (digitalRead(LED_YELLOW_PIN) == LOW && IS_DETECTED_ALREADY == false) {
             digitalWrite(LED_YELLOW_PIN, HIGH);
             digitalWrite(BUZZER_PIN, HIGH);
@@ -129,42 +129,45 @@ void loop() {
             Serial.println(DISTANCE);
           }
         } else {
-          digitalWrite(LED_YELLOW_PIN, LOW);
-          digitalWrite(BUZZER_PIN, LOW);
-          IS_DETECTED_ALREADY = false;
-          DISTANCE = 0;
-        }
-      }
-    } else {
-      LEFT_IR_STATE = digitalRead(LEFT_IR_PIN);;
-      RIGHT_IR_STATE = digitalRead(RIGHT_IR_PIN);
-      if (LEFT_IR_STATE == LOW || RIGHT_IR_STATE == LOW) {
-        if (digitalRead(LED_YELLOW_PIN) == LOW && IS_DETECTED_ALREADY == false) {
-          digitalWrite(LED_YELLOW_PIN, HIGH);
-          digitalWrite(BUZZER_PIN, HIGH);
-          IS_DETECTED_ALREADY = true;
-          if(LEFT_IR_STATE == LOW && RIGHT_IR_STATE == LOW) {
-            Serial.println("detected : both");
-          } else if(LEFT_IR_STATE == LOW && RIGHT_IR_STATE == HIGH) {
-            Serial.println("detected : left");
-          } else if (LEFT_IR_STATE == HIGH && RIGHT_IR_STATE == LOW) {
-            Serial.println("detected : right");
+          LEFT_IR_STATE = digitalRead(LEFT_IR_PIN);
+          RIGHT_IR_STATE = digitalRead(RIGHT_IR_PIN);
+          // Serial.print(digitalRead(LEFT_IR_PIN), BIN);
+          // Serial.print(" L | R ");
+          // Serial.println(digitalRead(RIGHT_IR_PIN), BIN);
+          if (LEFT_IR_STATE == HIGH || RIGHT_IR_STATE == HIGH) {
+
+            if (digitalRead(LED_YELLOW_PIN) == LOW && IS_DETECTED_ALREADY == false) {
+              digitalWrite(LED_YELLOW_PIN, HIGH);
+              digitalWrite(BUZZER_PIN, HIGH);
+              IS_DETECTED_ALREADY = true;
+              if (LEFT_IR_STATE == HIGH && RIGHT_IR_STATE == HIGH) {
+                Serial.println("detected : both");
+              } else if (LEFT_IR_STATE == HIGH && RIGHT_IR_STATE == LOW) {
+                Serial.println("detected : left");
+              } else if (LEFT_IR_STATE == LOW && RIGHT_IR_STATE == HIGH) {
+                Serial.println("detected : right");
+              } else {
+                delay(200);
+                if (digitalRead(LEFT_IR_PIN) == HIGH && digitalRead(RIGHT_IR_PIN) == HIGH) {
+                  Serial.println("detected : both");
+                } else {
+                  Serial.println("unknown");
+                }
+              }
+            }
           } else {
-            Serial.println("unknown");
+            digitalWrite(LED_YELLOW_PIN, LOW);
+            digitalWrite(BUZZER_PIN, LOW);
+            IS_DETECTED_ALREADY = false;
+            LEFT_IR_STATE = HIGH;
+            RIGHT_IR_STATE = HIGH;
           }
         }
-      } else {
-        digitalWrite(LED_YELLOW_PIN, LOW);
-        digitalWrite(BUZZER_PIN, LOW);
-        IS_DETECTED_ALREADY = false;
-        LEFT_IR_STATE = HIGH;
-        RIGHT_IR_STATE = HIGH;
       }
     }
-    delay(200);
-  } else {
-    TRAIN_BARRIER_FUNCTION();
   }
+  delay(200);
+  TRAIN_BARRIER_FUNCTION();
 }
 
 long microsecondsToCentimeters(long microseconds) {
